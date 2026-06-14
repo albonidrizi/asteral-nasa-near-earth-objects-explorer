@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.0</version>
+		<version>3.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.nasa</groupId>
@@ -16,7 +16,11 @@
 	<properties>
 		<java.version>21</java.version>
 		<excluded.test.groups>performance</excluded.test.groups>
+		<netty.version>4.1.135.Final</netty.version>
+		<postgresql.version>42.7.11</postgresql.version>
 		<testcontainers.version>1.21.4</testcontainers.version>
+		<thymeleaf.version>3.1.5.RELEASE</thymeleaf.version>
+		<tomcat.version>10.1.55</tomcat.version>
 	</properties>
 	<dependencies>
 		<dependency>

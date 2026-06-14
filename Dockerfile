@@ -8,7 +8,9 @@ RUN mvn -B clean package -DskipTests
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S asteral && adduser -S -G asteral -u 10001 asteral
+RUN apk upgrade --no-cache \
+    && addgroup -S asteral \
+    && adduser -S -G asteral -u 10001 asteral
 WORKDIR /app
 COPY --from=build --chown=asteral:asteral /app/target/*.jar app.jar
 USER 10001:10001
