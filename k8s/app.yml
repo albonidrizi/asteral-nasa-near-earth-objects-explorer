@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: asteral-config
+data:
+  DB_HOST: postgres.example.internal
+  DB_PORT: "5432"
+  DB_NAME: asteral
+  DB_USERNAME: asteral
+  SPRING_PROFILES_ACTIVE: prod
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asteral
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: asteral
+  template:
+    metadata:
+      labels:
+        app: asteral
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: asteral:local
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: asteral-config
+            - secretRef:
+                name: asteral-secrets
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsUser: 10001
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asteral
+spec:
+  selector:
+    app: asteral
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

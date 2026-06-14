@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Verify with unit, WireMock, Testcontainers, and coverage
+        run: ./mvnw -B clean verify
+      - name: Validate Kubernetes manifest rendering
+        run: kubectl kustomize k8s > /dev/null
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-and-coverage-reports
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: none
+      - uses: github/codeql-action/analyze@v3
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t asteral:test .
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: asteral:test
+          format: table
+          exit-code: "1"
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+  docker-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start complete demo
+        env:
+          DB_PASSWORD: ci-generated-non-production-password
+        run: docker compose up --build -d --wait
+      - name: Verify readiness
+        run: curl --fail --retry 10 --retry-delay 2 http://localhost:8080/actuator/health/readiness
+      - name: Compose logs
+        if: always()
+        run: docker compose logs
+      - name: Stop demo
+        if: always()
+        run: docker compose down -v

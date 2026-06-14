@@ -4,33 +4,38 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_NAME=nasa_challenge
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=password
-      - NASA_API_KEY=${NASA_API_KEY}
-      - NASA_API_DETAILS_ENDPOINT=https://api.nasa.gov/neo/rest/v1/neo
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: asteral
+      DB_USERNAME: asteral
+      DB_PASSWORD: ${DB_PASSWORD:?Run scripts/start-demo.ps1 or set DB_PASSWORD}
+      NASA_API_KEY: ${NASA_API_KEY:-DEMO_KEY}
     depends_on:
       db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health" ]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health/readiness" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
   db:
-    image: postgres:13-alpine
-    ports:
-      - "5433:5432"
+    image: postgres:17-alpine
     environment:
-      - POSTGRES_DB=nasa_challenge
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      POSTGRES_DB: asteral
+      POSTGRES_USER: asteral
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run scripts/start-demo.ps1 or set DB_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -U asteral -d asteral" ]
       interval: 5s
       timeout: 5s
       retries: 5
