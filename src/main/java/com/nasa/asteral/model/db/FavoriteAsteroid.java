@@ -21,14 +21,14 @@ import lombok.NoArgsConstructor;
 public class FavoriteAsteroid {
 	
 	@Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "FAVORITE_ID")
     private Long favoriteId;
 
-	@Column(name = "ASTEROID_REFERENCE_ID")
+	@Column(name = "ASTEROID_REFERENCE_ID", nullable = false, length = 64)
 	private String asteroidReferenceId;
 	
-	@Column(name = "USERNAME")
+	@Column(name = "USERNAME", nullable = false, length = 50)
 	private String username;
 	
 }

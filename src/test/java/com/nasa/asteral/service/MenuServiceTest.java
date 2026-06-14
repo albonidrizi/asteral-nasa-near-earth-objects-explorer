@@ -26,15 +26,13 @@ class MenuServiceTest {
 
         // Assert
         assertNotNull(menu);
-        assertEquals(4, menu.size());
+        assertEquals(3, menu.size());
         assertEquals("Asteroid Feed", menu.get(0).getLabel());
         assertEquals("/", menu.get(0).getLink());
         assertEquals("My Favorites", menu.get(1).getLabel());
         assertEquals("/user/favorite/all", menu.get(1).getLink());
         assertEquals("My Profile", menu.get(2).getLabel());
         assertEquals("/user/profile", menu.get(2).getLink());
-        assertEquals("Logout", menu.get(3).getLabel());
-        assertEquals("/logout", menu.get(3).getLink());
     }
 
     @Test

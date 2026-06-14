@@ -20,8 +20,7 @@ public class MenuService {
     private static final List<MyMenu> USER_MENU = Arrays.asList(
             new MyMenu("Asteroid Feed", "/"),
             new MyMenu("My Favorites", "/user/favorite/all"),
-            new MyMenu("My Profile", "/user/profile"),
-            new MyMenu("Logout", "/logout")
+            new MyMenu("My Profile", "/user/profile")
     );
 
     public List<MyMenu> retrieveMenuByAuthority(String authority) {

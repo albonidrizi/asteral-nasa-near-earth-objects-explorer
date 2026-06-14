@@ -27,6 +27,11 @@
                     <li th:each="menu : ${menu_list}">
                         <a class="nav-link" th:href="${menu.link}" th:text="${menu.label}" />
                     </li>
+                    <li sec:authorize="isAuthenticated()">
+                        <form th:action="@{/logout}" method="post">
+                            <button class="btn btn-link nav-link" type="submit">Logout</button>
+                        </form>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" rel="tooltip" title="Follow us on Twitter" data-placement="bottom" href="#"
@@ -102,7 +107,7 @@
         <footer class="footer footer-default">
             <div class="container">
                 <div class="copyright" id="copyright">
-                    <p>Project Asteral 2023 (c)</p>
+                    <p>Project Asteral</p>
                 </div>
             </div>
         </footer>

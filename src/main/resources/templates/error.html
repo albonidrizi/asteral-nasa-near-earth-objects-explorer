@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Asteral | Request failed</title>
+</head>
+<body>
+    <main>
+        <h1>Request failed</h1>
+        <p th:text="${errorMessage}">An unexpected error occurred.</p>
+        <p th:if="${correlationId}">
+            Reference: <code th:text="${correlationId}"></code>
+        </p>
+        <a href="/">Return to the asteroid feed</a>
+    </main>
+</body>
+</html>

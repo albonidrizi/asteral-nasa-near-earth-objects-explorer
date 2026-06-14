@@ -1,53 +1,34 @@
 package com.nasa.asteral.service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Clock;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import com.nasa.asteral.integration.nasa.NasaClient;
 import com.nasa.asteral.model.response.nasa.api.AsteroidFeedResponse;
-import com.nasa.asteral.utility.DateUtility;
+import com.nasa.asteral.model.response.nasa.api.AsteroidResponse;
+import com.nasa.asteral.model.response.nasa.api.CloseApprochResponse;
+import com.nasa.asteral.model.response.nasa.api.EstimatedDiameterDetailResponse;
+import com.nasa.asteral.model.response.nasa.api.EstimatedDiameterResponse;
 
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AsteroidFeedService {
 
-	@Value("${asteral.nasa.api.key}")
-	private String apiKey;
-
-	@Value("${asteral.nasa.api.feed.endpoint}")
-	private String asteroidFeedEndpoint;
-
-	private final IntegrationService integrationService;
-
+	private final NasaClient nasaClient;
 	private final FavoriteAsteroidService favoriteAsteroidService;
+	private final Clock clock;
 
-	@Cacheable(cacheNames = "asteroid-feed", key = "#username ?: 'anonymous'")
-	@CircuitBreaker(name = "nasaApi")
-	@Retry(name = "nasaApi")
 	public AsteroidFeedResponse getAsteroidFeed(String username) {
-		LocalDate startDate = LocalDate.now().minusDays(1);
-		LocalDate endDate = LocalDate.now();
-
-		Map<String, String> parameters = new HashMap<>();
-		parameters.put("start_date", DateUtility.getDateAsString(startDate));
-		parameters.put("end_date", DateUtility.getDateAsString(endDate));
-		parameters.put("api_key", apiKey);
-
-		AsteroidFeedResponse feedResponse = integrationService
-				.doGetRequest(asteroidFeedEndpoint, parameters, AsteroidFeedResponse.class);
-
+		LocalDate endDate = LocalDate.now(clock);
+		AsteroidFeedResponse feedResponse = copy(nasaClient.fetchFeed(endDate.minusDays(1), endDate));
 		setFavoriteToResponse(feedResponse, username);
-
 		return feedResponse;
 	}
 
@@ -56,6 +37,9 @@ public class AsteroidFeedService {
 			return;
 		}
 
+		if (asteroidFeedResponse.getNearEarthObjects() == null) {
+			return;
+		}
 		asteroidFeedResponse.getNearEarthObjects().forEach((key, value) -> {
 			value.forEach(asteroid -> {
 				boolean isFavorite = favoriteAsteroidService.isFavoriteAsteroid(asteroid.getReferenceId(), username);
@@ -64,4 +48,53 @@ public class AsteroidFeedService {
 		});
 	}
 
+	private AsteroidFeedResponse copy(AsteroidFeedResponse source) {
+		AsteroidFeedResponse copy = new AsteroidFeedResponse();
+		if (source == null || source.getNearEarthObjects() == null) {
+			copy.setNearEarthObjects(new LinkedHashMap<>());
+			return copy;
+		}
+		copy.setNearEarthObjects(source.getNearEarthObjects().entrySet().stream()
+				.collect(Collectors.toMap(
+						java.util.Map.Entry::getKey,
+						entry -> entry.getValue().stream().map(this::copyAsteroid).toList(),
+						(left, right) -> left,
+						LinkedHashMap::new)));
+		return copy;
+	}
+
+	private AsteroidResponse copyAsteroid(AsteroidResponse source) {
+		AsteroidResponse copy = new AsteroidResponse();
+		copy.setReferenceId(source.getReferenceId());
+		copy.setName(source.getName());
+		copy.setAbsoluteMagnitude(source.getAbsoluteMagnitude());
+		copy.setPotentiallyHazardous(source.isPotentiallyHazardous());
+		copy.setEstimatedDiameter(copyDiameter(source.getEstimatedDiameter()));
+		copy.setCloseApprochData(copyApproaches(source.getCloseApprochData()));
+		return copy;
+	}
+
+	private EstimatedDiameterResponse copyDiameter(EstimatedDiameterResponse source) {
+		if (source == null || source.getKilometers() == null) {
+			return null;
+		}
+		EstimatedDiameterDetailResponse detail = new EstimatedDiameterDetailResponse();
+		detail.setEstimatedDiameterMin(source.getKilometers().getEstimatedDiameterMin());
+		detail.setEstimatedDiameterMax(source.getKilometers().getEstimatedDiameterMax());
+		EstimatedDiameterResponse copy = new EstimatedDiameterResponse();
+		copy.setKilometers(detail);
+		return copy;
+	}
+
+	private List<CloseApprochResponse> copyApproaches(List<CloseApprochResponse> source) {
+		if (source == null) {
+			return List.of();
+		}
+		return source.stream().map(approach -> {
+			CloseApprochResponse copy = new CloseApprochResponse();
+			copy.setCloseApprochDate(approach.getCloseApprochDate());
+			copy.setOrbitingBody(approach.getOrbitingBody());
+			return copy;
+		}).toList();
+	}
 }

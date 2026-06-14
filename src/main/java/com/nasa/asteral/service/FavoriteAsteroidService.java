@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.nasa.asteral.model.db.FavoriteAsteroid;
 import com.nasa.asteral.model.response.dto.AsteroidDetailResponse;
@@ -20,6 +22,7 @@ public class FavoriteAsteroidService {
 	
 	private final AsteroidDetailService asteroidDetailService;
 	
+	@Transactional
 	public void addAsteroidToFavorite(String asteroidReferenceId, String username) {
 		Optional<FavoriteAsteroid>  optionalFavoriteAsteroid = favoriteAsteroidRepository
 				.findByAsteroidReferenceIdAndUsername(asteroidReferenceId, username);
@@ -34,8 +37,10 @@ public class FavoriteAsteroidService {
 				.username(username)
 				.build();
 		
-		if (favoriteAsteroid != null) {
-			favoriteAsteroidRepository.save(favoriteAsteroid);
+		try {
+			favoriteAsteroidRepository.saveAndFlush(favoriteAsteroid);
+		} catch (DataIntegrityViolationException ignored) {
+			// The database uniqueness constraint makes concurrent duplicate adds idempotent.
 		}
 	}
 	
@@ -48,6 +53,7 @@ public class FavoriteAsteroidService {
 		return favoriteAsteroidDetails;
 	}
 	
+	@Transactional
 	public void removeAsteroidFromFavorite(String referenceId, String username) {
 		Optional<FavoriteAsteroid> optionalFavoriteAsteroid = favoriteAsteroidRepository
 				.findByAsteroidReferenceIdAndUsername(referenceId, username);

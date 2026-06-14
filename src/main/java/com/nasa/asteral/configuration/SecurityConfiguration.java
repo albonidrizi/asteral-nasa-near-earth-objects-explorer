@@ -1,7 +1,5 @@
 package com.nasa.asteral.configuration;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,8 +23,8 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
     }
 
-    private static final String[] PUBLIC_ENDPOINTS = { "/", "/public", "/public/**", "/api/public/**", "/asteroid/**",
-            "/register", "/v3/api-docs/**", "/swagger-ui/**" };
+	private static final String[] PUBLIC_ENDPOINTS = { "/", "/public", "/public/**", "/api/public/**", "/asteroid/**",
+            "/register", "/actuator/health", "/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**" };
 
     private static final String[] USER_ENDPOINTS = { "/user", "/user/**", "/api/user/**" };
 
@@ -37,7 +35,6 @@ public class SecurityConfiguration {
 				.requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 				.requestMatchers(USER_ENDPOINTS).hasAnyAuthority("USER")
 				.anyRequest().authenticated())
-				.csrf(csrf -> csrf.disable()).cors(withDefaults())
 				.formLogin(login -> login
 						.loginPage("/login").defaultSuccessUrl("/")
 						.permitAll())

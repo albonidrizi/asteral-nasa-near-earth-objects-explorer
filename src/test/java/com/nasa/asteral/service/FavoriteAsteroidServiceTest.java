@@ -65,7 +65,7 @@ class FavoriteAsteroidServiceTest {
         favoriteAsteroidService.addAsteroidToFavorite("12345", "testuser");
 
         // Assert
-        verify(favoriteAsteroidRepository, times(1)).save(any(FavoriteAsteroid.class));
+        verify(favoriteAsteroidRepository, times(1)).saveAndFlush(any(FavoriteAsteroid.class));
     }
 
     @Test

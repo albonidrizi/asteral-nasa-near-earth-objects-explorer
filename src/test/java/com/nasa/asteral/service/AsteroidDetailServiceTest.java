@@ -1,23 +1,23 @@
 package com.nasa.asteral.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import com.nasa.asteral.integration.nasa.NasaClient;
 import com.nasa.asteral.model.response.dto.AsteroidDetailResponse;
 import com.nasa.asteral.model.response.nasa.api.AsteroidResponse;
+import com.nasa.asteral.model.response.nasa.api.CloseApprochResponse;
 import com.nasa.asteral.model.response.nasa.api.EstimatedDiameterDetailResponse;
 import com.nasa.asteral.model.response.nasa.api.EstimatedDiameterResponse;
 
@@ -25,47 +25,50 @@ import com.nasa.asteral.model.response.nasa.api.EstimatedDiameterResponse;
 class AsteroidDetailServiceTest {
 
     @Mock
-    private IntegrationService integrationService;
+    private NasaClient nasaClient;
 
-    @InjectMocks
-    private AsteroidDetailService asteroidDetailService;
+    private AsteroidDetailService service;
 
     @BeforeEach
-    @SuppressWarnings("null")
     void setUp() {
-        ReflectionTestUtils.setField(asteroidDetailService, "apiKey", "test-api-key");
-        ReflectionTestUtils.setField(asteroidDetailService, "asteroidDetailsEndpoint", "http://test.url");
+        Clock clock = Clock.fixed(Instant.parse("2026-06-14T00:00:00Z"), ZoneOffset.UTC);
+        service = new AsteroidDetailService(nasaClient, clock);
     }
 
     @Test
-    void getAsteroidDetailsById_shouldReturnDetails() {
-        // Arrange
-        String refId = "12345";
-        AsteroidResponse mockResponse = new AsteroidResponse();
-        mockResponse.setReferenceId(refId);
-        mockResponse.setName("Test Asteroid");
-        mockResponse.setAbsoluteMagnitude(10.5);
-        mockResponse.setCloseApprochData(Collections.emptyList());
+    void mapsDetailsAndSelectsNearestFutureApproach() {
+        AsteroidResponse asteroid = asteroid();
+        asteroid.setCloseApprochData(List.of(approach("2026-06-20"), approach("2026-06-16"), approach("2026-01-01")));
+        when(nasaClient.fetchAsteroid("12345")).thenReturn(asteroid);
 
-        EstimatedDiameterDetailResponse detail = new EstimatedDiameterDetailResponse();
-        detail.setEstimatedDiameterMin(1.0);
-        detail.setEstimatedDiameterMax(2.0);
+        AsteroidDetailResponse result = service.getAsteroidDetailsById("12345");
 
-        EstimatedDiameterResponse diameter = new EstimatedDiameterResponse();
-        diameter.setKilometers(detail);
-        mockResponse.setEstimatedDiameter(diameter);
-
-        when(integrationService.doGetRequest(any(), any(), eq(AsteroidResponse.class)))
-                .thenReturn(mockResponse);
-
-        // Act
-        AsteroidDetailResponse result = asteroidDetailService.getAsteroidDetailsById(refId);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(refId, result.getReferenceId());
+        assertEquals("12345", result.getReferenceId());
         assertEquals("Test Asteroid", result.getName());
         assertEquals(1.0, result.getEstimatedDiameterMinKm());
         assertEquals(2.0, result.getEstimatedDiameterMaxKm());
+        assertEquals(true, result.isPotentiallyHazardous());
+        assertEquals("2026-06-16", result.getLastCloseApproachingDate());
+    }
+
+    private AsteroidResponse asteroid() {
+        AsteroidResponse asteroid = new AsteroidResponse();
+        asteroid.setReferenceId("12345");
+        asteroid.setName("Test Asteroid");
+        asteroid.setPotentiallyHazardous(true);
+        EstimatedDiameterDetailResponse detail = new EstimatedDiameterDetailResponse();
+        detail.setEstimatedDiameterMin(1.0);
+        detail.setEstimatedDiameterMax(2.0);
+        EstimatedDiameterResponse diameter = new EstimatedDiameterResponse();
+        diameter.setKilometers(detail);
+        asteroid.setEstimatedDiameter(diameter);
+        return asteroid;
+    }
+
+    private CloseApprochResponse approach(String date) {
+        CloseApprochResponse approach = new CloseApprochResponse();
+        approach.setCloseApprochDate(date);
+        approach.setOrbitingBody("Earth");
+        return approach;
     }
 }
