@@ -16,6 +16,7 @@
 	<properties>
 		<java.version>21</java.version>
 		<excluded.test.groups>performance</excluded.test.groups>
+		<testcontainers.version>1.21.4</testcontainers.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -214,6 +215,25 @@
 		</plugins>
 	</build>
 	<profiles>
+		<profile>
+			<id>integration</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<executions>
+							<execution>
+								<goals>
+									<goal>integration-test</goal>
+									<goal>verify</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 		<profile>
 			<id>performance</id>
 			<properties>

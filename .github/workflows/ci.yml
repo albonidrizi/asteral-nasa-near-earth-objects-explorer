@@ -20,7 +20,7 @@ jobs:
           java-version: "21"
           cache: maven
       - name: Verify with unit, WireMock, Testcontainers, and coverage
-        run: ./mvnw -B clean verify
+        run: ./mvnw -B -Pintegration clean verify
       - name: Validate Kubernetes manifest rendering
         run: kubectl kustomize k8s > /dev/null
       - uses: actions/upload-artifact@v4
@@ -29,6 +29,7 @@ jobs:
           name: test-and-coverage-reports
           path: |
             target/surefire-reports/
+            target/failsafe-reports/
             target/site/jacoco/
 
   dependency-review:

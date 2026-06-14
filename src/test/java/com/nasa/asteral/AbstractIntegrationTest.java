@@ -9,12 +9,12 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers
 @ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:13-alpine")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17-alpine")
             .withDatabaseName("nasa_challenge")
             .withUsername("asteral_test")
             .withPassword("generated-only-for-testcontainer");

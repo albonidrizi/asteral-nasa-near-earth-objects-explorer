@@ -79,15 +79,19 @@ docker compose down -v
 
 ```bash
 ./mvnw clean verify
-docker compose config
-kubectl apply --dry-run=client -f k8s/app.yml
+./mvnw -Pintegration clean verify
+DB_PASSWORD=verification-only docker compose config --quiet
+kubectl kustomize k8s
 ./mvnw -Pperformance -Dtest=CachePerformanceEvidenceTest test
 ```
 
-`clean verify` runs unit, MVC security, WireMock, and coverage checks.
-Testcontainers tests run when Docker is available and are explicitly skipped
-when it is not. JaCoCo enforces a 70% instruction-coverage gate; the latest
-verified run measured 72.09%.
+`clean verify` runs unit, MVC security, WireMock, and coverage checks without
+requiring Docker. `-Pintegration clean verify` additionally requires and runs
+the PostgreSQL Testcontainers suite; it fails rather than silently skipping
+when Docker is unavailable. CI uses this integration profile. JaCoCo enforces a
+70% instruction-coverage gate. The latest verified full run completed 38
+standard tests and 2 PostgreSQL tests with no skips; the standard suite measured
+72.04% instruction coverage.
 
 ## Resilience behavior
 
