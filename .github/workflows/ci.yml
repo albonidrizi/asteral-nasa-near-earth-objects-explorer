@@ -78,11 +78,11 @@ jobs:
 
   docker-smoke:
     runs-on: ubuntu-latest
+    env:
+      DB_PASSWORD: ci-generated-non-production-password
     steps:
       - uses: actions/checkout@v4
       - name: Start complete demo
-        env:
-          DB_PASSWORD: ci-generated-non-production-password
         run: docker compose up --build -d --wait
       - name: Verify readiness
         run: curl --fail --retry 10 --retry-delay 2 http://localhost:8080/actuator/health/readiness
