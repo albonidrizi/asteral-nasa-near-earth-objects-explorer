@@ -13,7 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/dependency-review-action@v4
 
   codeql:
@@ -47,7 +47,7 @@ jobs:
       security-events: write
       packages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: github/codeql-action/init@v3
         with:
           languages: java-kotlin
@@ -57,7 +57,7 @@ jobs:
   secrets:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
@@ -65,7 +65,7 @@ jobs:
   container:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build image
         run: docker build -t asteral:test .
       - name: Scan image
@@ -82,7 +82,7 @@ jobs:
     env:
       DB_PASSWORD: ci-generated-non-production-password
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Start complete demo
         run: docker compose up --build -d --wait
       - name: Verify readiness
