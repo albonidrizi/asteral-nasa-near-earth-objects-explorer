@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn -B clean package -DskipTests
 
 # Runtime stage
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN apk upgrade --no-cache \
     && addgroup -S asteral \
     && adduser -S -G asteral -u 10001 asteral
