@@ -10,3 +10,153 @@
     box-shadow: 3px 3px 0px transparent;
     transition: 0.5s;
     }
+
+.asteroid-size-panel {
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(4, 58, 117, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(4, 58, 117, 0.16);
+    margin-top: -42px;
+    padding: 16px 20px 13px;
+}
+
+.asteroid-size-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.asteroid-size-header h2 {
+    color: #172133;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+}
+
+.asteroid-size-header p {
+    color: #697386;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.asteroid-size-header .asteroid-size-eyebrow {
+    color: #1769aa;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.asteroid-size-summary {
+    display: flex;
+    flex-shrink: 0;
+    gap: 5px;
+}
+
+.asteroid-size-summary span {
+    background: #eaf4ff;
+    border-radius: 999px;
+    color: #1769aa;
+    font-size: 0.7rem;
+    padding: 5px 9px;
+}
+
+.asteroid-size-summary .hazard-summary {
+    background: #fff0f2;
+    color: #b42335;
+}
+
+.asteroid-size-chart {
+    display: grid;
+    gap: 7px;
+}
+
+.asteroid-size-meta {
+    display: flex;
+    font-size: 0.72rem;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.asteroid-size-meta span {
+    color: #3d485a;
+    max-width: 75%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.asteroid-size-meta strong {
+    color: #172133;
+    font-weight: 700;
+}
+
+.asteroid-size-track {
+    background: #edf2f7;
+    border-radius: 999px;
+    height: 7px;
+    overflow: hidden;
+}
+
+.asteroid-size-bar {
+    border-radius: 999px;
+    height: 100%;
+}
+
+.asteroid-size-bar.standard {
+    background: linear-gradient(90deg, #1769aa, #4da3e6);
+}
+
+.asteroid-size-bar.hazardous {
+    background: linear-gradient(90deg, #b42335, #ef6575);
+}
+
+.asteroid-size-legend {
+    color: #697386;
+    display: flex;
+    font-size: 0.65rem;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.legend-dot {
+    border-radius: 50%;
+    display: inline-block;
+    height: 7px;
+    margin-right: 4px;
+    width: 7px;
+}
+
+.legend-dot.standard {
+    background: #1769aa;
+}
+
+.legend-dot.hazardous {
+    background: #d93f52;
+}
+
+.asteroid-size-empty {
+    color: #697386;
+    font-size: 0.8rem;
+    margin: 8px 0;
+    text-align: center;
+}
+
+@media (max-width: 767px) {
+    .asteroid-size-panel {
+        margin-top: -24px;
+        padding: 16px;
+    }
+
+    .asteroid-size-header {
+        display: block;
+    }
+
+    .asteroid-size-summary {
+        margin-top: 10px;
+    }
+}

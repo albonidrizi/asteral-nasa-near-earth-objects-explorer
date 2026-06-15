@@ -13,8 +13,6 @@
 
     <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
     <link href="https://use.fontawesome.com/releases/v5.0.6/css/all.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <meta charset="UTF-8">
     <title>Asteral Feed</title>
 </head>
@@ -74,23 +72,33 @@
 
         <div class="container">
             <div class="row">
-                <div class="col-md-10 ml-auto mr-auto">
-                    <div class="card card-chart"
-                        style="background: rgba(255,255,255,0.9); border-radius: 15px; padding: 20px; margin-top: -50px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <div class="card-header">
-                            <h4 class="card-title" style="color: #333; font-weight: bold;">Asteroid Size Comparison (Max
-                                Diameter Km)</h4>
-                            <p class="card-category">Showing top 15 largest objects in current feed</p>
+                <div class="col-lg-9 ml-auto mr-auto">
+                    <section class="asteroid-size-panel" aria-labelledby="asteroid-size-title">
+                        <div class="asteroid-size-header">
+                            <div>
+                                <p class="asteroid-size-eyebrow">Current NASA feed</p>
+                                <h2 id="asteroid-size-title">Largest asteroids by estimated diameter</h2>
+                                <p>Top objects ranked by maximum estimated diameter in kilometers.</p>
+                            </div>
+                            <div class="asteroid-size-summary" aria-label="Feed summary">
+                                <span><strong id="asteroid-count">0</strong> objects</span>
+                                <span class="hazard-summary"><strong id="hazard-count">0</strong> hazardous</span>
+                            </div>
                         </div>
-                        <div class="card-body" style="height: 400px;">
-                            <canvas id="asteroidChart"></canvas>
+                        <div id="asteroid-size-chart" class="asteroid-size-chart" role="img"
+                            aria-label="Largest asteroids in the current feed">
+                            <p class="asteroid-size-empty">Preparing size comparison...</p>
                         </div>
-                    </div>
+                        <div class="asteroid-size-legend">
+                            <span><i class="legend-dot standard"></i> Standard</span>
+                            <span><i class="legend-dot hazardous"></i> Potentially hazardous</span>
+                        </div>
+                    </section>
                 </div>
             </div>
         </div>
 
-        <br><br>
+        <br>
 
         <div class="container" th:each="asteroid : ${asteroidResponse.nearEarthObjects}">
             <div class="row col-md-6 col-md-offset-2 custyle">
@@ -150,39 +158,54 @@
             const asteroidData = /*[[${asteroidResponse.nearEarthObjects}]]*/ {};
             if (!asteroidData) return;
 
-            const labels = [], sizes = [], colors = [];
-            Object.keys(asteroidData).forEach(date => {
-                asteroidData[date].forEach(ast => {
-                    labels.push(ast.name);
-                    sizes.push(ast.estimatedDiameter.kilometers.estimatedDiameterMax);
-                    colors.push(ast.potentiallyHazardous ? 'rgba(255, 99, 132, 0.7)' : 'rgba(54, 162, 235, 0.7)');
-                });
-            });
+            const objects = Object.values(asteroidData)
+                .flat()
+                .map(ast => ({
+                    name: ast.name,
+                    size: ast.estimated_diameter?.kilometers?.estimated_diameter_max,
+                    hazardous: ast.is_potentially_hazardous_asteroid
+                }))
+                .filter(ast => Number.isFinite(ast.size));
 
-            const combined = labels.map((l, i) => ({ l, s: sizes[i], c: colors[i] })).sort((a, b) => b.s - a.s).slice(0, 15);
+            document.getElementById('asteroid-count').textContent = objects.length;
+            document.getElementById('hazard-count').textContent = objects.filter(ast => ast.hazardous).length;
 
-            if (combined.length > 0) {
-                new Chart(document.getElementById('asteroidChart'), {
-                    type: 'bar',
-                    data: {
-                        labels: combined.map(x => x.l),
-                        datasets: [{
-                            label: 'Max Diameter (Km)',
-                            data: combined.map(x => x.s),
-                            backgroundColor: combined.map(x => x.c),
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { beginAtZero: true, title: { display: true, text: 'Max Diameter (Km)' } }
-                        },
-                        plugins: { legend: { display: false } }
-                    }
-                });
+            const largest = objects.sort((a, b) => b.size - a.size).slice(0, 6);
+            const chart = document.getElementById('asteroid-size-chart');
+
+            if (largest.length === 0) {
+                chart.innerHTML = '<p class="asteroid-size-empty">Size data is unavailable for this feed.</p>';
+                return;
             }
+
+            const largestSize = largest[0].size;
+            chart.replaceChildren();
+            largest.forEach(ast => {
+                const row = document.createElement('div');
+                row.className = 'asteroid-size-row';
+
+                const meta = document.createElement('div');
+                meta.className = 'asteroid-size-meta';
+
+                const name = document.createElement('span');
+                name.title = ast.name;
+                name.textContent = ast.name;
+
+                const size = document.createElement('strong');
+                size.textContent = `${ast.size.toFixed(3)} km`;
+
+                const track = document.createElement('div');
+                track.className = 'asteroid-size-track';
+
+                const bar = document.createElement('div');
+                bar.className = `asteroid-size-bar ${ast.hazardous ? 'hazardous' : 'standard'}`;
+                bar.style.width = `${Math.max((ast.size / largestSize) * 100, 3)}%`;
+
+                meta.append(name, size);
+                track.append(bar);
+                row.append(meta, track);
+                chart.append(row);
+            });
         });
         /*]]>*/
     </script>
