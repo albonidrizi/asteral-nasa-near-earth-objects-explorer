@@ -72,21 +72,24 @@
                     <div class="row">
                         <div class="col-lg-6 text-center col-md-8 ml-auto mr-auto">
                             <div class="input-group input-lg">
+                                <label class="sr-only" for="registration-username">Username</label>
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">
                                         <i class="now-ui-icons users_circle-08"></i>
                                     </span>
                                 </div>
-                                <input type="text" class="form-control" placeholder="Username" name="username" required>
+                                <input id="registration-username" type="text" class="form-control" placeholder="Username"
+                                    name="username" required>
                             </div>
                             <div class="input-group input-lg">
+                                <label class="sr-only" for="registration-password">Password</label>
                                 <div class="input-group-prepend">
                                     <span class="input-group-text">
                                         <i class="now-ui-icons objects_key-25"></i>
                                     </span>
                                 </div>
-                                <input type="password" class="form-control" placeholder="Password" name="password"
-                                    minlength="12" maxlength="72" required>
+                                <input id="registration-password" type="password" class="form-control"
+                                    placeholder="Password" name="password" minlength="12" maxlength="72" required>
                             </div>
                             <p class="text-muted">Password must contain between 12 and 72 characters.</p>
                             <div class="send-button">

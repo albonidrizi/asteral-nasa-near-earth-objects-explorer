@@ -22,7 +22,6 @@ public class FavoriteAsteroidService {
 	
 	private final AsteroidDetailService asteroidDetailService;
 	
-	@Transactional
 	public void addAsteroidToFavorite(String asteroidReferenceId, String username) {
 		Optional<FavoriteAsteroid>  optionalFavoriteAsteroid = favoriteAsteroidRepository
 				.findByAsteroidReferenceIdAndUsername(asteroidReferenceId, username);

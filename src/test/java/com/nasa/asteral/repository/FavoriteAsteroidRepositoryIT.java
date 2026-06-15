@@ -2,9 +2,13 @@ package com.nasa.asteral.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
@@ -16,7 +20,7 @@ import com.nasa.asteral.model.db.FavoriteAsteroid;
 import com.nasa.asteral.model.db.MyUser;
 import com.nasa.asteral.service.FavoriteAsteroidService;
 
-class FavoriteAsteroidRepositoryIntegrationTest extends AbstractIntegrationTest {
+class FavoriteAsteroidRepositoryIT extends AbstractIntegrationTest {
 
     @Autowired
     private FavoriteAsteroidRepository favoriteRepository;
@@ -46,18 +50,22 @@ class FavoriteAsteroidRepositoryIntegrationTest extends AbstractIntegrationTest 
         CountDownLatch start = new CountDownLatch(1);
 
         try (var executor = Executors.newFixedThreadPool(workers)) {
+            List<Future<Void>> results = new ArrayList<>();
             for (int index = 0; index < workers; index++) {
-                executor.submit(() -> {
+                results.add(executor.submit(() -> {
                     ready.countDown();
                     start.await();
                     favoriteService.addAsteroidToFavorite("same-asteroid", "concurrent-user");
                     return null;
-                });
+                }));
             }
-            ready.await(10, TimeUnit.SECONDS);
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
             start.countDown();
             executor.shutdown();
-            executor.awaitTermination(20, TimeUnit.SECONDS);
+            assertTrue(executor.awaitTermination(20, TimeUnit.SECONDS));
+            for (Future<Void> result : results) {
+                result.get();
+            }
         }
 
         assertEquals(1, favoriteRepository.findByUsername("concurrent-user").size());

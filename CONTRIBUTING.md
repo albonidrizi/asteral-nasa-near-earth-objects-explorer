@@ -9,8 +9,9 @@
 
 ```bash
 ./mvnw clean verify
-docker compose config
-kubectl apply --dry-run=client -f k8s/app.yml
+./mvnw -Pintegration clean verify
+DB_PASSWORD=verification-only docker compose config --quiet
+kubectl kustomize k8s
 ```
 
 4. Add or update tests for behavioral changes.

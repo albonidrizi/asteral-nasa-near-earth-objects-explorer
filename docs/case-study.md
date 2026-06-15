@@ -28,8 +28,8 @@ unverified portfolio claims made it difficult to trust or operate.
 - Empty-feed fallback keeps the UI available but can hide stale data; a future
   stale-cache design should expose freshness.
 - The public NASA `DEMO_KEY` makes onboarding easy but is heavily rate limited.
-- H2 keeps most tests fast; Testcontainers supplies PostgreSQL-specific proof
-  when Docker is available.
+- H2 keeps the default suite fast; the explicit `integration` Maven profile
+  requires Testcontainers and fails if PostgreSQL-specific proof cannot run.
 - Kubernetes intentionally omits database and ingress provisioning.
 
 ## Lessons

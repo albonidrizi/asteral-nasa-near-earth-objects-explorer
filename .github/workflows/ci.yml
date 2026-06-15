@@ -23,7 +23,7 @@ jobs:
           java-version: "21"
           cache: maven
       - name: Verify with unit, WireMock, Testcontainers, and coverage
-        run: ./mvnw -B clean verify
+        run: ./mvnw -B -Pintegration clean verify
       - name: Validate Kubernetes manifest rendering
         run: kubectl kustomize k8s > /dev/null
       - uses: actions/upload-artifact@v4
@@ -32,6 +32,7 @@ jobs:
           name: test-and-coverage-reports
           path: |
             target/surefire-reports/
+            target/failsafe-reports/
             target/site/jacoco/
 
   dependency-review:
@@ -71,7 +72,7 @@ jobs:
       - name: Build image
         run: docker build -t asteral:test .
       - name: Scan image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: asteral:test
           format: table

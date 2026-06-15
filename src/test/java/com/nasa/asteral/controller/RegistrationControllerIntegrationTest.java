@@ -1,8 +1,10 @@
 package com.nasa.asteral.controller;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
@@ -21,6 +23,16 @@ class RegistrationControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void registrationFormAssociatesInputsWithAccessibleLabels() throws Exception {
+        mockMvc.perform(get("/register"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("for=\"registration-username\"")))
+                .andExpect(content().string(containsString("id=\"registration-username\"")))
+                .andExpect(content().string(containsString("for=\"registration-password\"")))
+                .andExpect(content().string(containsString("id=\"registration-password\"")));
+    }
 
     @Test
     void shortPasswordReturnsActionableValidationMessage() throws Exception {
