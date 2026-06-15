@@ -7,21 +7,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.nasa.asteral.model.db.MyUser;
+import com.nasa.asteral.model.request.RegistrationRequest;
 import com.nasa.asteral.repository.MyUserRepository;
 
 import lombok.RequiredArgsConstructor;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
 import java.util.Locale;
 
 @Controller
 @RequiredArgsConstructor
-@Validated
 public class RegistrationController {
 
     private final MyUserRepository myUserRepository;
@@ -34,12 +34,22 @@ public class RegistrationController {
 
     @PostMapping("/register")
     public String registerUser(
-            @RequestParam @Size(min = 3, max = 50) String username,
-            @RequestParam @Size(min = 12, max = 72) String password,
+            @Valid @ModelAttribute("registration") RegistrationRequest registration,
+            BindingResult bindingResult,
             HttpServletRequest request,
             Model model) {
 
-        String normalizedUsername = username.trim().toLowerCase(Locale.ROOT);
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("error", bindingResult.getAllErrors().getFirst().getDefaultMessage());
+            return "register";
+        }
+
+        String normalizedUsername = registration.getUsername().trim().toLowerCase(Locale.ROOT);
+        if (normalizedUsername.length() < 3) {
+            model.addAttribute("error", "Username must be between 3 and 50 characters.");
+            return "register";
+        }
+
         if (myUserRepository.findUserByUsernameIgnoreCase(normalizedUsername).isPresent()) {
             model.addAttribute("error", "Username already exists");
             return "register";
@@ -47,7 +57,7 @@ public class RegistrationController {
 
         MyUser newUser = new MyUser();
         newUser.setUsername(normalizedUsername);
-        newUser.setPassword(passwordEncoder.encode(password));
+        newUser.setPassword(passwordEncoder.encode(registration.getPassword()));
         newUser.setRole("USER");
 
         try {
@@ -58,7 +68,7 @@ public class RegistrationController {
         }
 
         try {
-            request.login(normalizedUsername, password);
+            request.login(normalizedUsername, registration.getPassword());
         } catch (ServletException e) {
             model.addAttribute("error", "Registration successful but auto-login failed.");
             return "login";

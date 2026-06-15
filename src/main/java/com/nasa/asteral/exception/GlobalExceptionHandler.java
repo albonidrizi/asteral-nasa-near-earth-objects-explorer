@@ -1,9 +1,12 @@
 package com.nasa.asteral.exception;
 
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.nasa.asteral.configuration.CorrelationIdFilter;
 
@@ -17,6 +20,14 @@ public class GlobalExceptionHandler {
     public String handleNasaUnavailable(NasaApiUnavailableException exception, Model model) {
         log.warn("NASA API unavailable", exception);
         addError(model, "NASA data is temporarily unavailable. Please try again later.");
+        return "error";
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleNotFound(NoResourceFoundException exception, Model model) {
+        log.debug("Resource not found: {}", exception.getResourcePath());
+        addError(model, "The requested page or resource was not found.");
         return "error";
     }
 
